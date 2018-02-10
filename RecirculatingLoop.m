@@ -10,6 +10,7 @@ classdef RecirculatingLoop
         cur_loop      % current loop
         aom_ppg       % GPIB object of PPG that controls AOMs
         trigger_ppg   % GPIB object of PPG that controls trigger
+        initialized = false % true if loop has been initialized successfully
     end
     
     %% Private properties
@@ -34,15 +35,24 @@ classdef RecirculatingLoop
             validateattributes(tloop,{'numeric'},{'scalar','positive'})
             validateattributes(max_loops,{'numeric'},{'scalar','positive','integer'})       
             
-            %% Calculate parameters
+            obj.initialized = false; % at beginning loop is not initialized
             obj.tloop = tloop;
             obj.max_loops = max_loops;
             obj.tfill = 1.5*obj.tloop; % time to fill the loop
             obj.f_trig = 1/(obj.tfill+max_loops*obj.tloop); % trigger time
             obj.cur_loop = 1; % select first loop by default
+            obj.aom_ppg = gpib('ni',0,addr1); % set first PPG GPIB
+            obj.trigger_ppg = gpib('ni',0,addr2); % set second PPG GPIB
+        end
+        
+        %% Initialize loop
+        function obj = Initialize(obj)
+            %INITIALIZE Initialize loop
+            %   This function initializes the loop, re-setting the two PPGs
+            %   from scratch. Must be run the first time.
             
-            %% Set up first PPG
-            obj.aom_ppg = gpib('ni',0,addr1);
+            %% AOMs PPG
+            % Open connection
             fopen(obj.aom_ppg);
             
             fprintf(obj.aom_ppg,'CL'); % clear instrument
@@ -70,8 +80,7 @@ classdef RecirculatingLoop
             % Close connection
             fclose(obj.aom_ppg);
             
-            %% Set up second
-            obj.trigger_ppg = gpib('ni',0,addr2);
+            %% Trigger PPG
             fopen(obj.trigger_ppg);
             
             fprintf(obj.trigger_ppg,'CL'); % clear instrument
@@ -95,6 +104,9 @@ classdef RecirculatingLoop
             
             % Close connection
             fclose(obj.trigger_ppg);
+            
+            %% Set to initialized
+            obj.initialized = true;            
         end
         
         %% Reconfigure loop
@@ -105,7 +117,13 @@ classdef RecirculatingLoop
             validateattributes(tloop,{'numeric'},{'scalar','positive'})
             validateattributes(max_loops,{'numeric'},{'scalar','positive','integer'})
             
+            %% Check if loop is OK
+            if ~obj.initialized
+                error('Loop not initialized; please initialize');
+            end
+            
             %% Calculate parameters
+            obj.initialized = false;
             obj.tloop = tloop;
             obj.max_loops = max_loops;
             obj.tfill = 1.5*obj.tloop; % time to fill the loop
@@ -127,6 +145,8 @@ classdef RecirculatingLoop
                 (obj.cur_loop-1+0.05)*obj.tloop,'%E')]);
             fprintf(obj.trigger_ppg,['DT 3,2,',num2str(obj.tloop*0.9,'%E')]);
             fclose(obj.trigger_ppg);
+            
+            obj.initialized = true;
         end
         
         %% Select loop
@@ -136,6 +156,11 @@ classdef RecirculatingLoop
             %   max_loops
             validateattributes(cur_loop,{'numeric'},{'scalar','nonnegative',...
                 '<=',obj.max_loops})
+            
+            %% Check if loop is OK
+            if ~obj.initialized
+                error('Loop not initialized; please initialize');
+            end
             
             %% Calculate parameters
             obj.cur_loop = cur_loop; % select first loop by default
