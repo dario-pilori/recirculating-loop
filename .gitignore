@@ -1,0 +1,8 @@
+# Avoid text files and backup
+*.txt
+*.log
+*.asv
+*.sh
+*.m~
+*.mex*
+slprj/
