@@ -1,4 +1,4 @@
-classdef RecirculatingLoop
+classdef RecirculatingLoop < handle
     %RECIRCULATINGLOOP Recirculating Optical Fiber Loop
     %   This class defines the RecirculatingLoop object, which
     %   characterizes a recirculating optical fiber loop.
@@ -171,6 +171,13 @@ classdef RecirculatingLoop
                 (obj.cur_loop-1+0.05)*obj.tloop,'%E')]);
             fprintf(obj.trigger_ppg,['DT 3,2,',num2str(obj.tloop*0.9,'%E')]);
             fclose(obj.trigger_ppg);
+        end
+        
+        %% Destructor
+        function delete(obj)
+            % Delete handles to PPG
+            delete(obj.trigger_ppg);
+            delete(obj.aom_ppg);
         end
     end
 end
