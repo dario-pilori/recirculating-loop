@@ -106,7 +106,12 @@ classdef RecirculatingLoop < handle
             fclose(obj.trigger_ppg);
             
             %% Set to initialized
-            obj.initialized = true;            
+            obj.initialized = true;    
+            
+            %% Suppress output
+            if nargout == 0
+                clear obj
+            end
         end
         
         %% Reconfigure loop
@@ -147,6 +152,11 @@ classdef RecirculatingLoop < handle
             fclose(obj.trigger_ppg);
             
             obj.initialized = true;
+            
+            %% Suppress output
+            if nargout == 0
+                clear obj
+            end
         end
         
         %% Select loop
@@ -171,6 +181,11 @@ classdef RecirculatingLoop < handle
                 (obj.cur_loop-1+0.05)*obj.tloop,'%E')]);
             fprintf(obj.trigger_ppg,['DT 3,2,',num2str(obj.tloop*0.9,'%E')]);
             fclose(obj.trigger_ppg);
+            
+            %% Suppress output
+            if nargout == 0
+                clear obj
+            end
         end
         
         %% Destructor
