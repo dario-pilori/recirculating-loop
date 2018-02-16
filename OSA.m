@@ -67,7 +67,7 @@ classdef OSA < handle
             % Stop capturing
             query(obj.gpib_addr,'*OPC?');                   % wait to complete all operations
             fprintf(obj.gpib_addr,'INIT:CONT off');
-
+            
             % Close OSA
             fclose(obj.gpib_addr);
             
@@ -84,7 +84,7 @@ classdef OSA < handle
     %% Static methods
     methods(Static)
         %% Capture a trace from the OSA
-        function [t,l,RBW] = getOSAtrace(g)      
+        function [t,l,RBW] = getOSAtrace(g)
             fopen(g);                          % Open connection
             
             %% Get OSA params
@@ -101,7 +101,7 @@ classdef OSA < handle
             end
             
             %% Read data
-            query(g,'*OPC?');      % wait to complete all operations            
+            query(g,'*OPC?');      % wait to complete all operations
             fprintf(g,'TRAC:DATA:Y? TRA');     % Ask for trace
             x = binblockread(g,'uchar');       % Read trace for scope
             fclose(g);                         % Close connection
@@ -111,6 +111,34 @@ classdef OSA < handle
             t = typecast(uint8(x),'double');           % convert to double
             assert(length(t)==N,'OSA trace length is different than expected.');
             l = linspace(start,stop,N).';              % get wavelength scale
+        end
+        
+        %% Calculate OSNR from OSA trace
+        function [OSNR,P_SIG,P_ASE] = measureOsnr(t,l,RBW,Rs,SIG_box,ASE_box)
+            %MEASUREOSNR   Simple function to calculate the OSNR
+            %   Use this function to evaluate the OSNR from a high-resolution (RBW <<
+            %   Rs) optical spectrum.
+            %   2018 - Dario Pilori <dario.pilori@polito.it>
+            
+            %% Calculate params
+            f_ax = 299792458./l;                    % frequency axis (Hz)
+            resBW = RBW * mean(f_ax)^2/299792458;   % resolution bandwidth (Hz)
+            
+            %% Calculate signal power
+            G_SIG_ASE = trapz(t(SIG_box(1):SIG_box(2)))/...
+                (SIG_box(2)-SIG_box(1)+1);
+            P_SIG_ASE = G_SIG_ASE + 10*log10(Rs/resBW);
+            
+            %% Calculate ASE power
+            ws = warning('off','all');  % Turn off warning
+            pol = polyfit([f_ax(ASE_box(1):ASE_box(2));f_ax(ASE_box(3):ASE_box(4))],...
+                [t(ASE_box(1):ASE_box(2));t(ASE_box(3):ASE_box(4))],1);
+            warning(ws); % turn on warning
+            P_ASE = polyval(pol,mean(f_ax))+10*log10(Rs/resBW); % ASE power over Rs (dBm)
+            
+            %% Calculate OSNR
+            P_SIG = 10*log10(10.^(P_SIG_ASE/10) - 10.^(P_ASE/10)); % Signal power (dBm)
+            OSNR = P_SIG-P_ASE;                                   % OSNR over nominal power (dB over Rs)
         end
     end
 end
