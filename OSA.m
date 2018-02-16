@@ -2,9 +2,10 @@ classdef OSA < handle
     %OSA Optical Spectrum Analyzer
     %   This class defines the OSA object, which
     %   characterizes the HP 86142A OSA.
+    %   2018 - Dario Pilori <dario.pilori@polito.it>
     
-    %% Read-only properties
-    properties (SetAccess = private, GetAccess = public)
+    %% Properties
+    properties
         gpib_addr         % GPIB address of the OSA
     end
     
@@ -18,12 +19,22 @@ classdef OSA < handle
             % addr     := GPIB address of HP 86142A OSA
             validateattributes(addr,{'numeric'},{'scalar','nonnegative','integer'})
             
+            %% Initialize GPIB object
             obj.gpib_addr = gpib('ni',0,addr); % set scope
             obj.gpib_addr.InputBufferSize = 8008; % set buffer size for 1001 samples
+            
+            %% Set default options
+            fopen(obj.gpib_addr);
+            
+            fprintf(obj.gpib_addr,'SYS:COMM:GPIB:BUFF ON'); % enable buffer
+            fprintf(obj.gpib_addr,'INIT:CONT OFF');         % stop automatic sweep
+            query(obj.gpib_addr,'*OPC?');                   % wait to complete all operations
+            
+            fclose(obj.gpib_addr);
         end
         
-        %% Reconfigure loop
-        function x = GetLoopTrace(obj,varargin)
+        %% Get trace from loop
+        function [x,l,RBW] = GetLoopTrace(obj,varargin)
             %GETLOOPTRACE Get a trace from the loop
             %   Use this function to obtain a fresh trace from the
             %   recirculating loop
@@ -32,7 +43,7 @@ classdef OSA < handle
                 validateattributes(varargin{1},{'numeric'},{'scalar','nonnegative'})
                 wait = varargin{1};
             else
-                wait = 60;
+                wait = 30;
             end
             
             % Open OSA
@@ -46,19 +57,22 @@ classdef OSA < handle
             % Wait
             l = waitbar(0,['Waiting ',num2str(wait),' seconds...']);
             for i = 0:wait-1
-                waitbar(i/wait);
+                if ~mod(i,5)
+                    waitbar(i/wait);
+                end
                 pause(1);
             end
             close(l);
             
             % Stop capturing
+            query(obj.gpib_addr,'*OPC?');                   % wait to complete all operations
             fprintf(obj.gpib_addr,'INIT:CONT off');
 
             % Close OSA
             fclose(obj.gpib_addr);
             
             % Get trace from scope
-            x = obj.getOSAtrace(obj.gpib_addr);
+            [x,l,RBW] = obj.getOSAtrace(obj.gpib_addr);
         end
         
         %% Destructor
@@ -70,14 +84,33 @@ classdef OSA < handle
     %% Static methods
     methods(Static)
         %% Capture a trace from the OSA
-        function t = getOSAtrace(g)      
+        function [t,l,RBW] = getOSAtrace(g)      
             fopen(g);                          % Open connection
+            
+            %% Get OSA params
             fprintf(g,'FORMat:DATA REAL,64');  % Set data to binary 64-bit floating point
+            start = str2double(query(g,'TRAC:DATA:X:STAR? TRA')); % get initial wavelength
+            stop = str2double(query(g,'TRAC:DATA:X:STAR? TRA')); % get initial wavelength
+            RBW = str2double(query(g,'BAND?'));  % get resolution bandwidth
+            N = str2double(query(g,'TRACe:POINts? TRA'));   % get number of points
+            if 8*N > g.InputBufferSize
+                warning(['Extending GPIB InputBufferSize to ',num2str(8*N)]);
+                fclose(g);
+                g.InputBufferSize = 8*N;
+                fopen(g);
+            end
+            
+            %% Read data
+            query(g,'*OPC?');      % wait to complete all operations            
             fprintf(g,'TRAC:DATA:Y? TRA');     % Ask for trace
             x = binblockread(g,'uchar');       % Read trace for scope
             fclose(g);                         % Close connection
+            
+            %% Prepare output
             x = reshape(flipud(reshape(x,8,[])),[],1); % Correct endianness
-            t = typecast(uint8(x),'double');   % convert to double and exit
+            t = typecast(uint8(x),'double');           % convert to double
+            assert(length(t)==N,'OSA trace length is different than expected.');
+            l = linspace(start,stop,N).';              % get wavelength scale
         end
     end
 end
