@@ -3,7 +3,7 @@ classdef RecirculatingLoop < handle
     %   This class defines the RecirculatingLoop object, which
     %   characterizes a recirculating optical fiber loop.
     %   2018 - Dario Pilori <dario.pilori@polito.it>
-    
+        
     %% Read-only properties
     properties (SetAccess = private, GetAccess = public)
         tloop         % propagation delay of each loop (seconds)
@@ -12,6 +12,7 @@ classdef RecirculatingLoop < handle
         aom_ppg       % GPIB object of PPG that controls AOMs
         trigger_ppg   % GPIB object of PPG that controls trigger
         initialized = false % true if loop has been initialized successfully
+        scrambler_delay = 0 % polarization scrambler delay (seconds)
     end
     
     %% Private properties
@@ -102,7 +103,9 @@ classdef RecirculatingLoop < handle
             fprintf(obj.trigger_ppg,['DT 2,1,',num2str(obj.tfill+...
                 (obj.cur_loop-1+0.05)*obj.tloop,'%E')]);
             fprintf(obj.trigger_ppg,['DT 3,2,',num2str(obj.tloop*0.9,'%E')]);
-            
+            fprintf(obj.trigger_ppg,['DT 5,1,',num2str(obj.tfill-obj.scrambler_delay,'%E')]);
+            fprintf(obj.trigger_ppg,['DT 6,5,',num2str(100e-6,'%E')]);
+
             % Close connection
             fclose(obj.trigger_ppg);
             
@@ -150,6 +153,8 @@ classdef RecirculatingLoop < handle
             fprintf(obj.trigger_ppg,['DT 2,1,',num2str(obj.tfill+...
                 (obj.cur_loop-1+0.05)*obj.tloop,'%E')]);
             fprintf(obj.trigger_ppg,['DT 3,2,',num2str(obj.tloop*0.9,'%E')]);
+            fprintf(obj.trigger_ppg,['DT 5,1,',num2str(obj.tfill-obj.scrambler_delay,'%E')]);
+            fprintf(obj.trigger_ppg,['DT 6,5,',num2str(100e-6,'%E')]);
             fclose(obj.trigger_ppg);
             
             obj.initialized = true;
@@ -182,6 +187,28 @@ classdef RecirculatingLoop < handle
                 (obj.cur_loop-1+0.05)*obj.tloop,'%E')]);
             fprintf(obj.trigger_ppg,['DT 3,2,',num2str(obj.tloop*0.9,'%E')]);
             fclose(obj.trigger_ppg);
+            
+            %% Suppress output
+            if nargout == 0
+                clear obj
+            end
+        end
+        
+        %% Change scrambler delay
+        function  obj = set_scrambler_delay(obj,value)
+            %SCRAMBLER_DELAY Set scrambler delay
+            %   Use this function to change the time that the polarization
+            %   scrambler needs to react to a trigger
+            validateattributes(value,{'numeric'},{'scalar','nonnegative'});
+            
+            %% Set delay on PPG
+            fopen(obj.trigger_ppg);
+            fprintf(obj.trigger_ppg,['DT 5,1,',num2str(obj.tfill-value,'%E')]);
+            fprintf(obj.trigger_ppg,['DT 6,5,',num2str(100e-6,'%E')]);
+            fclose(obj.trigger_ppg);
+            
+            %% Set property
+            obj.scrambler_delay = value;
             
             %% Suppress output
             if nargout == 0
