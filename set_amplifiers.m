@@ -8,7 +8,7 @@ function set_amplifiers(Ptx,G1,Pout)
 %   2018 - Dario Pilori <dario.pilori@polito.it>
 
 % Settings
-addrs = [11;15;17];
+addrs = [11;13;15];
 amps = cell(size(addrs));
 
 % Set up GPIB connection

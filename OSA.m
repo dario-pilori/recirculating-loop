@@ -57,7 +57,7 @@ classdef OSA < handle
             % Wait
             l = waitbar(0,['Waiting ',num2str(wait),' seconds...']);
             for i = 0:wait-1
-                if ~mod(i,5)
+                if ~mod(i,10)
                     waitbar(i/wait);
                 end
                 pause(1);
@@ -90,7 +90,7 @@ classdef OSA < handle
             %% Get OSA params
             fprintf(g,'FORMat:DATA REAL,64');  % Set data to binary 64-bit floating point
             start = str2double(query(g,'TRAC:DATA:X:STAR? TRA')); % get initial wavelength
-            stop = str2double(query(g,'TRAC:DATA:X:STAR? TRA')); % get initial wavelength
+            stop = str2double(query(g,'TRAC:DATA:X:STOP? TRA')); % get initial wavelength
             RBW = str2double(query(g,'BAND?'));  % get resolution bandwidth
             N = str2double(query(g,'TRACe:POINts? TRA'));   % get number of points
             if 8*N > g.InputBufferSize
