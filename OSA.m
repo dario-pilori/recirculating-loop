@@ -114,7 +114,7 @@ classdef OSA < handle
         end
         
         %% Calculate OSNR from OSA trace
-        function [OSNR,P_SIG,P_ASE] = measureOsnr(t,l,RBW,Rs,SIG_box,ASE_box)
+        function [OSNR,P_SIG,P_ASE] = measureOsnr_HighRes(x,l,RBW,Rs,ASE_box,varargin)
             %MEASUREOSNR   Simple function to calculate the OSNR
             %   Use this function to evaluate the OSNR from a high-resolution (RBW <<
             %   Rs) optical spectrum.
@@ -122,23 +122,82 @@ classdef OSA < handle
             
             %% Calculate params
             f_ax = 299792458./l;                    % frequency axis (Hz)
-            resBW = RBW * mean(f_ax)^2/299792458;   % resolution bandwidth (Hz)
+            x_lin = 10.^(x/10);                     % spectrum in linear scale (mW)
+            RBW_f = 299792458/mean(l)^2*RBW;        % resolution bw (Hz)
+            assert(Rs>4*RBW_f,'Resolution bandwidth must be much lower than symbol rate');
             
             %% Calculate signal power
-            G_SIG_ASE = trapz(t(SIG_box(1):SIG_box(2)))/...
+            [~,idx] = max(x);
+            SIG_box = idx + [1;-1] * floor((Rs/mean(diff(f_ax))-1)/2);
+            G_SIG_ASE = sum(x_lin(SIG_box(1):SIG_box(2)))/...
                 (SIG_box(2)-SIG_box(1)+1);
-            P_SIG_ASE = G_SIG_ASE + 10*log10(Rs/resBW);
+            P_SIG_ASE = 10*log10(G_SIG_ASE);    % SIG power over RBW
             
             %% Calculate ASE power
             ws = warning('off','all');  % Turn off warning
             pol = polyfit([f_ax(ASE_box(1):ASE_box(2));f_ax(ASE_box(3):ASE_box(4))],...
-                [t(ASE_box(1):ASE_box(2));t(ASE_box(3):ASE_box(4))],1);
+                [x(ASE_box(1):ASE_box(2));x(ASE_box(3):ASE_box(4))],1);
             warning(ws); % turn on warning
-            P_ASE = polyval(pol,mean(f_ax))+10*log10(Rs/resBW); % ASE power over Rs (dBm)
+            P_ASE = polyval(pol,mean(f_ax)); % ASE power over RBW (dBm)
             
             %% Calculate OSNR
             P_SIG = 10*log10(10.^(P_SIG_ASE/10) - 10.^(P_ASE/10)); % Signal power (dBm)
             OSNR = P_SIG-P_ASE;                                   % OSNR over nominal power (dB over Rs)
+            
+            %% Plot OSNR
+            if nargin>5&&varargin{1}
+                figure
+                hold on
+                plot(l*1e9,x)
+                plot(l*1e9,P_SIG_ASE*ones(length(l),1),'--')
+                plot(l*1e9,P_ASE*ones(length(l),1),'--')
+                grid on
+                xlabel('\lambda (nm)')
+                ylabel('Spectrum (dBm)')
+                title(['RBW: ',num2str(RBW*1e9),' nm'])
+                box on
+            end
+        end
+        
+        %% Calculate OSNR from OSA trace
+        function [OSNR,P_SIG,P_ASE] = measureOsnr_LowRes(x,l,RBW,Rs,ASE_box,varargin)
+            %MEASUREOSNR   Simple function to calculate the OSNR
+            %   Use this function to evaluate the OSNR from a
+            %   low-resolution (RBW > Rs) optical spectrum.
+            %   2018 - Dario Pilori <dario.pilori@polito.it>
+            
+            %% Calculate params
+            f_ax = 299792458./l;                    % frequency axis (Hz)
+            RBW_f = 299792458/mean(l)^2*RBW;        % resolution bw (Hz)
+            assert(Rs<1.5*RBW_f,'Resolution bandwidth must be greater than symbol rate');
+            
+            %% Calculate signal power
+            P_SIG_ASE = max(medfilt1(x,3));  % Signal power + ASEoverRBW (dBm)
+            
+            %% Calculate ASE power
+            ws = warning('off','all');  % Turn off warning
+            pol = polyfit([f_ax(ASE_box(1):ASE_box(2));f_ax(ASE_box(3):ASE_box(4))],...
+                [x(ASE_box(1):ASE_box(2));x(ASE_box(3):ASE_box(4))],1);
+            warning(ws); % turn on warning
+            P_ASE = polyval(pol,mean(f_ax)); % ASE power over RBW (dBm)
+            
+            %% Calculate OSNR
+            P_SIG = 10*log10(10.^(P_SIG_ASE/10) - 10.^(P_ASE/10)); % Signal power (dBm)
+            OSNR = P_SIG-P_ASE+10*log10(RBW_f/Rs);                                   % OSNR over nominal power (dB over Rs)
+            
+            %% Plot OSNR
+            if nargin>5&&varargin{1}
+                figure
+                hold on
+                plot(l*1e9,x)
+                plot(l*1e9,P_SIG_ASE*ones(length(l),1),'--')
+                plot(l*1e9,P_ASE*ones(length(l),1),'--')
+                grid on
+                xlabel('\lambda (nm)')
+                ylabel('Spectrum (dBm)')
+                title(['RBW: ',num2str(RBW*1e9),' nm'])
+                box on
+            end
         end
     end
 end
