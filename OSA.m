@@ -9,6 +9,10 @@ classdef OSA < handle
         gpib_addr         % GPIB address of the OSA
     end
     
+%     properties (SetAccess = private, GetAccess = public)
+%         rbw   % resol
+%     end
+    
     %% Methods
     methods
         %% Constructor
@@ -74,6 +78,12 @@ classdef OSA < handle
             % Get trace from scope
             [x,l,RBW] = obj.getOSAtrace(obj.gpib_addr);
         end
+%         
+%         %% Set resolution bandwidth
+%         function SetResBw(obj,rbw)
+%             
+%             fprintf(o.gpib_addr,'SENS:BAND:RES 0.06NM');
+%         end
         
         %% Destructor
         function delete(obj)

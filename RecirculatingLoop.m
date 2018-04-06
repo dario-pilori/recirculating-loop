@@ -195,7 +195,7 @@ classdef RecirculatingLoop < handle
         end
         
         %% Change scrambler delay
-        function  obj = set_scrambler_delay(obj,value)
+        function  obj = SetScramblerDelay(obj,value)
             %SCRAMBLER_DELAY Set scrambler delay
             %   Use this function to change the time that the polarization
             %   scrambler needs to react to a trigger
