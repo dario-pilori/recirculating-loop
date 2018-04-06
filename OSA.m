@@ -124,7 +124,7 @@ classdef OSA < handle
             f_ax = 299792458./l;                    % frequency axis (Hz)
             x_lin = 10.^(x/10);                     % spectrum in linear scale (mW)
             RBW_f = 299792458/mean(l)^2*RBW;        % resolution bw (Hz)
-            assert(Rs>4*RBW_f,'Resolution bandwidth must be much lower than symbol rate');
+            assert(Rs>2*RBW_f,'Resolution bandwidth must be much lower than symbol rate');
             
             %% Calculate signal power
             [~,idx] = max(x);
@@ -135,10 +135,10 @@ classdef OSA < handle
             
             %% Calculate ASE power
             ws = warning('off','all');  % Turn off warning
-            pol = polyfit([f_ax(ASE_box(1):ASE_box(2));f_ax(ASE_box(3):ASE_box(4))],...
+            pol = polyfit([l(ASE_box(1):ASE_box(2));l(ASE_box(3):ASE_box(4))],...
                 [x(ASE_box(1):ASE_box(2));x(ASE_box(3):ASE_box(4))],1);
             warning(ws); % turn on warning
-            P_ASE = polyval(pol,mean(f_ax)); % ASE power over RBW (dBm)
+            P_ASE = polyval(pol,l(idx)); % ASE power over RBW (dBm)
             
             %% Calculate OSNR
             P_SIG = 10*log10(10.^(P_SIG_ASE/10) - 10.^(P_ASE/10)); % Signal power (dBm)
@@ -150,7 +150,7 @@ classdef OSA < handle
                 hold on
                 plot(l*1e9,x)
                 plot(l*1e9,P_SIG_ASE*ones(length(l),1),'--')
-                plot(l*1e9,P_ASE*ones(length(l),1),'--')
+                plot(l*1e9,(polyval(pol,l)),'--')
                 grid on
                 xlabel('\lambda (nm)')
                 ylabel('Spectrum (dBm)')
@@ -167,19 +167,18 @@ classdef OSA < handle
             %   2018 - Dario Pilori <dario.pilori@polito.it>
             
             %% Calculate params
-            f_ax = 299792458./l;                    % frequency axis (Hz)
             RBW_f = 299792458/mean(l)^2*RBW;        % resolution bw (Hz)
             assert(Rs<1.5*RBW_f,'Resolution bandwidth must be greater than symbol rate');
             
             %% Calculate signal power
-            P_SIG_ASE = max(medfilt1(x,3));  % Signal power + ASEoverRBW (dBm)
+            [P_SIG_ASE,idx] = max(medfilt1(x,3));  % Signal power + ASEoverRBW (dBm)
             
             %% Calculate ASE power
             ws = warning('off','all');  % Turn off warning
-            pol = polyfit([f_ax(ASE_box(1):ASE_box(2));f_ax(ASE_box(3):ASE_box(4))],...
+            pol = polyfit([l(ASE_box(1):ASE_box(2));l(ASE_box(3):ASE_box(4))],...
                 [x(ASE_box(1):ASE_box(2));x(ASE_box(3):ASE_box(4))],1);
             warning(ws); % turn on warning
-            P_ASE = polyval(pol,mean(f_ax)); % ASE power over RBW (dBm)
+            P_ASE = polyval(pol,l(idx)); % ASE power over RBW (dBm)
             
             %% Calculate OSNR
             P_SIG = 10*log10(10.^(P_SIG_ASE/10) - 10.^(P_ASE/10)); % Signal power (dBm)
@@ -191,7 +190,7 @@ classdef OSA < handle
                 hold on
                 plot(l*1e9,x)
                 plot(l*1e9,P_SIG_ASE*ones(length(l),1),'--')
-                plot(l*1e9,P_ASE*ones(length(l),1),'--')
+                plot(l*1e9,(polyval(pol,l)),'--')
                 grid on
                 xlabel('\lambda (nm)')
                 ylabel('Spectrum (dBm)')
