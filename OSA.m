@@ -140,7 +140,7 @@ classdef OSA < handle
             
             %% Calculate signal power
             [~,idx] = max(x);
-            SIG_box = idx + [1;-1] * round((Rs/mean(diff(f_ax))-1)/2);
+            SIG_box = idx + [1;-1] * floor((Rs/mean(diff(f_ax))-1)/2);
             G_SIG_ASE = sum(x_lin(SIG_box(1):SIG_box(2)))/...
                 (SIG_box(2)-SIG_box(1)+1);
             P_SIG_ASE = 10*log10(G_SIG_ASE);    % SIG power over RBW
@@ -163,6 +163,7 @@ classdef OSA < handle
                 plot(l*1e9,x)
                 plot(l*1e9,P_SIG_ASE*ones(length(l),1),'--')
                 plot(l*1e9,(polyval(pol,l)),'--')
+                plot(l(idx)*1e9,x(idx),'o','MarkerSize',8)
                 grid on
                 xlabel('\lambda (nm)')
                 ylabel('Spectrum (dBm)')
@@ -203,6 +204,7 @@ classdef OSA < handle
                 plot(l*1e9,x)
                 plot(l*1e9,P_SIG_ASE*ones(length(l),1),'--')
                 plot(l*1e9,(polyval(pol,l)),'--')
+                plot(l(idx)*1e9,x(idx),'o','MarkerSize',8)
                 grid on
                 xlabel('\lambda (nm)')
                 ylabel('Spectrum (dBm)')
