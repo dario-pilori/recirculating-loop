@@ -3,7 +3,7 @@ clear
 close all
 clc
 
-global att l o
+global att l o a1 a2
 
 %% Set up recirculating loop
 tloop = 1.4682/299792458*25260*6;
@@ -17,3 +17,10 @@ o = OSA(23);
 
 %% Set up attenuator
 att = Attenuator('TCPIP0::ipq-sl-voa101::inst0::INSTR');
+
+%% Set up amplifiers
+a1 = gpib('ni',0,11);
+a2 = gpib('ni',0,13);
+
+%% Set up laser
+laser = visa('agilent','TCPIP0::ipq-sl-laser110::inst0::INSTR');

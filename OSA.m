@@ -9,10 +9,6 @@ classdef OSA < handle
         gpib_addr         % GPIB address of the OSA
     end
     
-%     properties (SetAccess = private, GetAccess = public)
-%         rbw   % resol
-%     end
-    
     %% Methods
     methods
         %% Constructor
@@ -56,7 +52,7 @@ classdef OSA < handle
             % Clear max-hold and capture
             fprintf(obj.gpib_addr,'INIT:CONT on');
             fprintf(obj.gpib_addr,'CALCulate1:MAXimum:CLEar');
-            fprintf(obj.gpib_addr,'CALCulate1:MAXimum:STATe');
+            fprintf(obj.gpib_addr,'CALCulate1:MAXimum:STATe ON');
             
             % Wait
             l = waitbar(0,['Waiting ',num2str(wait),' seconds...']);
@@ -78,15 +74,21 @@ classdef OSA < handle
             % Get trace from scope
             [x,l,RBW] = obj.getOSAtrace(obj.gpib_addr);
         end
-%         
-%         %% Set resolution bandwidth
-%         function SetResBw(obj,rbw)
-%             
-%             fprintf(o.gpib_addr,'SENS:BAND:RES 0.06NM');
-%         end
+        
+        %% Set resolution bandwidth
+        function SetResBw(obj,rbw)
+            %SETRESBW Set resolution bandwidth (nm)
+            validateattributes(rbw,{'numeric'},{'scalar','positive'})
+            
+            fopen(obj.gpib_addr);
+            fprintf(obj.gpib_addr,['SENS:BAND:RES ',num2str(rbw),'NM']);
+            query(obj.gpib_addr,'*OPC?');                   % wait to complete all operations
+            fclose(obj.gpib_addr);
+        end
         
         %% Destructor
         function delete(obj)
+            fclose(obj.gpib_addr);
             delete(obj.gpib_addr);
         end
     end
@@ -138,7 +140,7 @@ classdef OSA < handle
             
             %% Calculate signal power
             [~,idx] = max(x);
-            SIG_box = idx + [1;-1] * floor((Rs/mean(diff(f_ax))-1)/2);
+            SIG_box = idx + [1;-1] * round((Rs/mean(diff(f_ax))-1)/2);
             G_SIG_ASE = sum(x_lin(SIG_box(1):SIG_box(2)))/...
                 (SIG_box(2)-SIG_box(1)+1);
             P_SIG_ASE = 10*log10(G_SIG_ASE);    % SIG power over RBW

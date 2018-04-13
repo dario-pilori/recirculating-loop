@@ -20,6 +20,7 @@ end
 fopen(amps{1});
 fprintf(amps{1},'REM');
 query(amps{1},['CPU=',num2str(round(Ptx*10),'%03d')]);
+pause(2);
 fprintf(amps{1},'GTL');
 fclose(amps{1});
 
@@ -27,6 +28,7 @@ fclose(amps{1});
 fopen(amps{2});
 fprintf(amps{2},'REM');
 query(amps{2},['CGA=',num2str(round(G1*10),'%03d')]);
+pause(2);
 fprintf(amps{2},'GTL');
 fclose(amps{2});
 
@@ -34,6 +36,7 @@ fclose(amps{2});
 fopen(amps{3});
 fprintf(amps{3},'REM');
 query(amps{3},['CPU=',num2str(round(Pout*10),'%03d')]);
+pause(2);
 fprintf(amps{3},'GTL');
 fclose(amps{3});
 
