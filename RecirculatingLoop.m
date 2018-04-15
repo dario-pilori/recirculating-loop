@@ -15,10 +15,16 @@ classdef RecirculatingLoop < handle
         scrambler_delay = 0 % polarization scrambler delay (seconds)
     end
     
+    %% Public properties
+    properties
+        start_delay = 0.25   % trigger start delay (fraction of tloop)
+        stop_advance = 0.15  % trigger stop advance (fraction of tloop)
+    end
+    
     %% Private properties
     properties (Access = private)
-        tfill         % time to fill the loop (seconds)
-        f_trig        % trigger frequency (Hz)
+        tfill              % time to fill the loop (seconds)
+        f_trig             % trigger frequency (Hz)
     end
     
     %% Methods
@@ -101,8 +107,9 @@ classdef RecirculatingLoop < handle
             
             % Set delays
             fprintf(obj.trigger_ppg,['DT 2,1,',num2str(obj.tfill+...
-                (obj.cur_loop-1+0.05)*obj.tloop,'%E')]);
-            fprintf(obj.trigger_ppg,['DT 3,2,',num2str(obj.tloop*0.9,'%E')]);
+                (obj.cur_loop-1+obj.start_delay)*obj.tloop,'%E')]);
+            fprintf(obj.trigger_ppg,['DT 3,2,',...
+                num2str(obj.tloop*(1-obj.start_delay-obj.stop_advance),'%E')]);
             fprintf(obj.trigger_ppg,['DT 5,1,',num2str(obj.tfill-obj.scrambler_delay,'%E')]);
             fprintf(obj.trigger_ppg,['DT 6,5,',num2str(100e-6,'%E')]);
 
@@ -151,8 +158,9 @@ classdef RecirculatingLoop < handle
             %% Set up second PPG
             fopen(obj.trigger_ppg);
             fprintf(obj.trigger_ppg,['DT 2,1,',num2str(obj.tfill+...
-                (obj.cur_loop-1+0.05)*obj.tloop,'%E')]);
-            fprintf(obj.trigger_ppg,['DT 3,2,',num2str(obj.tloop*0.9,'%E')]);
+                (obj.cur_loop-1+obj.start_delay)*obj.tloop,'%E')]);
+            fprintf(obj.trigger_ppg,['DT 3,2,',...
+                num2str(obj.tloop*(1-obj.start_delay-obj.stop_advance),'%E')]);
             fprintf(obj.trigger_ppg,['DT 5,1,',num2str(obj.tfill-obj.scrambler_delay,'%E')]);
             fprintf(obj.trigger_ppg,['DT 6,5,',num2str(100e-6,'%E')]);
             fclose(obj.trigger_ppg);
@@ -184,8 +192,9 @@ classdef RecirculatingLoop < handle
             %% Set up second PPG
             fopen(obj.trigger_ppg);
             fprintf(obj.trigger_ppg,['DT 2,1,',num2str(obj.tfill+...
-                (obj.cur_loop-1+0.05)*obj.tloop,'%E')]);
-            fprintf(obj.trigger_ppg,['DT 3,2,',num2str(obj.tloop*0.9,'%E')]);
+                (obj.cur_loop-1+obj.start_delay)*obj.tloop,'%E')]);
+            fprintf(obj.trigger_ppg,['DT 3,2,',...
+                num2str(obj.tloop*(1-obj.start_delay-obj.stop_advance),'%E')]);
             fclose(obj.trigger_ppg);
             
             %% Suppress output
