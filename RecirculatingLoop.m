@@ -59,6 +59,10 @@ classdef RecirculatingLoop < handle
             %   This function initializes the loop, re-setting the two PPGs
             %   from scratch. Must be run the first time.
             
+            if (obj.start_delay+obj.stop_advance)>=1
+                error('start_delay and stop_advance are too large');
+            end
+            
             %% AOMs PPG
             % Open connection
             fopen(obj.aom_ppg);
@@ -137,6 +141,10 @@ classdef RecirculatingLoop < handle
             if ~obj.initialized
                 error('Loop not initialized; please initialize');
             end
+            if (obj.start_delay+obj.stop_advance)>=1
+                error('start_delay and stop_advance are too large');
+            end
+
             
             %% Calculate parameters
             obj.initialized = false;
@@ -181,9 +189,12 @@ classdef RecirculatingLoop < handle
             validateattributes(cur_loop,{'numeric'},{'scalar','nonnegative',...
                 '<=',obj.max_loops})
             
-            %% Check if loop is OK
+            %% Check
             if ~obj.initialized
                 error('Loop not initialized; please initialize');
+            end
+            if (obj.start_delay+obj.stop_advance)>=1
+                error('start_delay and stop_advance are too large');
             end
             
             %% Calculate parameters
@@ -223,6 +234,19 @@ classdef RecirculatingLoop < handle
             if nargout == 0
                 clear obj
             end
+        end
+        
+        %% Set property methods
+        % Check start_delay
+        function set.start_delay(obj, value)
+            validateattributes(value,{'numeric'},{'scalar','>=',0,'<=',1});
+            obj.start_delay = value;
+        end
+        
+        % Check stop advance
+        function set.stop_advance(obj, value)
+            validateattributes(value,{'numeric'},{'scalar','>=',0,'<=',1});
+            obj.stop_advance = value;
         end
         
         %% Destructor
