@@ -1,3 +1,4 @@
+*.m gitlab-language=matlab
 *.mat -crlf -diff -merge
 *.p -crlf -diff -merge
 *.slx -crlf -diff -merge
