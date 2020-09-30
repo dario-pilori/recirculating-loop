@@ -2,7 +2,8 @@ classdef OSA < handle
     %OSA Optical Spectrum Analyzer
     %   This class defines the OSA object, which
     %   characterizes the HP 86142A OSA.
-    %   2018 - Dario Pilori <dario.pilori@polito.it>
+    %   Copyright (c) 2018 Dario Pilori, Politecnico di Torino <d.pilori@inrim.it>
+    %   SPDX-License-Identifier: MIT
     
     %% Properties
     properties

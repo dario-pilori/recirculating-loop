@@ -5,7 +5,8 @@ function set_amplifiers(Ptx,G1,Pout)
 %   mode, while the "internal" amplifiers are in constant-gain mode. Powers
 %   are in dBm, while gains are in dB.
 %
-%   2018 - Dario Pilori <dario.pilori@polito.it>
+%   Copyright (c) 2018 Dario Pilori, Politecnico di Torino <d.pilori@inrim.it>
+%   SPDX-License-Identifier: MIT
 
 % Settings
 addrs = [11;13;15];

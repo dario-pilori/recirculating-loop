@@ -2,7 +2,9 @@ classdef RecirculatingLoop < handle
     %RECIRCULATINGLOOP Recirculating Optical Fiber Loop
     %   This class defines the RecirculatingLoop object, which
     %   characterizes a recirculating optical fiber loop.
-    %   2018 - Dario Pilori <dario.pilori@polito.it>
+    %   Copyright (c) 2018 Dario Pilori, Politecnico di Torino <d.pilori@inrim.it>
+    %   SPDX-License-Identifier: MIT
+
         
     %% Read-only properties
     properties (SetAccess = private, GetAccess = public)

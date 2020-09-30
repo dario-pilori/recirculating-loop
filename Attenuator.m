@@ -2,7 +2,8 @@ classdef Attenuator < handle
     %ATTENUATOR Optical Attenuator
     %   This class defines the Attenuator object, which
     %   characterizes the Agilent N7764A attenuator.
-    %   2018 - Dario Pilori <dario.pilori@polito.it>
+    %   Copyright (c) 2018 Dario Pilori, Politecnico di Torino <d.pilori@inrim.it>
+    %   SPDX-License-Identifier: MIT
     
     %% Properties
     properties

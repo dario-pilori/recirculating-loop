@@ -1,4 +1,6 @@
 % Use this script to set up from zero the recirculating loop
+%   Copyright (c) 2018 Dario Pilori, Politecnico di Torino <d.pilori@inrim.it>
+%   SPDX-License-Identifier: MIT
 clear
 close all
 clc

@@ -1,7 +1,8 @@
 function n=set_launch_power(a1,a2,Ptx)
 %SET_LAUNCH_POWER     Set Keopsys amplifer launch power
 %
-%   2018 - Dario Pilori <dario.pilori@polito.it>
+%   Copyright (c) 2018 Dario Pilori, Politecnico di Torino <d.pilori@inrim.it>
+%   SPDX-License-Identifier: MIT
 
 % Set amplifier 1 to constant power
 fopen(a1);
